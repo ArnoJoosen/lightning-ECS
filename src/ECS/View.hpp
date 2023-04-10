@@ -40,7 +40,8 @@ namespace lightning {
 
                 // add tag pools
                 std::for_each(tags.begin(), tags.end(), [&](Tag_t tag){
-                    tag_pools.push_back(&pool_holder.Get_Pool(tag));
+                    Tag_Pool_Node node = {(tag & 0x80000000) != 0, &pool_holder.Get_Pool(GET_TAG(tag))};
+                    tag_pools.push_back(node);
                 });
 
                 // add entities with tags
@@ -72,13 +73,14 @@ namespace lightning {
                 }, excludes_pools);
 
                 // register listeners for tags
-                std::for_each(tag_pools.begin(), tag_pools.end(), [&](auto* pool){
-                    pool->RegisterAddCallback([&](Entity_t entity){
-                        if (check_entity(entity))
-                            Entitys.push_back(entity);
+                std::for_each(tag_pools.begin(), tag_pools.end(), [&](Tag_Pool_Node node){
+                    node.pool->RegisterAddCallback([&](Entity_t entity){
+                        if (check_entity(entity)) Entitys.push_back(entity);
+                        else Entitys.erase(std::remove(Entitys.begin(), Entitys.end(), entity), Entitys.end());
                     });
-                    pool->RegisterRemoveCallback([&](Entity_t entity){
-                        Entitys.erase(std::remove(Entitys.begin(), Entitys.end(), entity), Entitys.end());
+                    node.pool->RegisterRemoveCallback([&](Entity_t entity){
+                        if (check_entity(entity)) Entitys.push_back(entity);
+                        else Entitys.erase(std::remove(Entitys.begin(), Entitys.end(), entity), Entitys.end());
                     });
                 });
             }
@@ -156,14 +158,20 @@ namespace lightning {
             bool check_entity(Entity_t entity){
                 bool In = std::apply([entity](auto& ... pools) { return (pools.Has(entity) && ...); }, include_pools);
                 bool Ex = std::apply([entity](auto& ... pools) { return (pools.Has(entity) && ...); }, excludes_pools);
-                bool T = std::all_of(tag_pools.begin(), tag_pools.end(), [entity](Tag_Pool* pool) { return pool->HasEntity(entity); });
+                bool T = std::all_of(tag_pools.begin(), tag_pools.end(), [entity](Tag_Pool_Node node) {
+                    return (node.pool->HasEntity(entity) && !node.IsExcluded) || (!node.pool->HasEntity(entity) && node.IsExcluded);
+                });
                 return In && ((!Ex)||(sizeof...(Exclude) == 0)) && T;
             }
 
         private:
             std::tuple<Component_Pool<Include>&...> include_pools;
             std::tuple<Component_Pool<Exclude>&...> excludes_pools;
-            std::vector<Tag_Pool*> tag_pools;
+            struct Tag_Pool_Node{
+                bool IsExcluded;
+                Tag_Pool* pool;
+            };
+            std::vector<Tag_Pool_Node> tag_pools;
             std::vector<Entity_t> Entitys;
         };
     } // ECS

@@ -106,6 +106,10 @@ namespace lightning::ECS {
         /// - output: view of entities
         template<typename ... Include, typename ... Exclude>
         View<Includes<Include...>, Excludes<Exclude...>> view(std::initializer_list<Tag_t> tags = {}, Excludes<Exclude...> exclude = Excludes<>()) {
+            size_t id = typeid(View<Includes<Include...>, Excludes<Exclude...>>).hash_code();
+            for (auto& tag : tags)
+                id = id ^ tag;
+
             return View<Includes<Include...>, Excludes<Exclude...>>(Entitys, pools, tags);
         }
 
