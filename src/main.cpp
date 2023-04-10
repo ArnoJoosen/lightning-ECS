@@ -3,6 +3,10 @@
 
 using namespace lightning;
 
+// TODO: add viewer pool
+// TODO: add only tag view
+// TODO: add one component view
+
 struct Position {
     float x, y;
 };
@@ -23,8 +27,13 @@ struct Name {
     std::string name;
 };
 
-template<typename view_t>
-void Print_View(view_t& view){
+DEFINE_TAG(tag1, 46544654165);
+DEFINE_TAG(tag2, 54695121566);
+
+ECS::registry registry;
+auto view = registry.view<Position, Name>({tag1, EXCLUDE_TAG(tag2)}, ECS::Excludes<Health>());
+
+void Print_View(){
     if (view.size() == 0)
         std::cout << "  No entities" << std::endl;
     else
@@ -35,11 +44,6 @@ void Print_View(view_t& view){
 }
 
 int main() {
-    ECS::registry registry;
-
-    DEFINE_TAG(tag1, 46544654165);
-    DEFINE_TAG(tag2, 54695121566);
-
     auto entity1 = registry.CreateEntity();
     Name name1 = {"Bob"};
     registry.Add<Name>(entity1, name1);
@@ -61,36 +65,34 @@ int main() {
     registry.Add<Name>(entity3, name3);
     registry.Add<Position>(entity3);
 
-    auto view = registry.view<Position, Name>({tag1, EXCLUDE_TAG(tag2)}, ECS::Excludes<Health>());
-
     std::cout << "Before adding Health to John: \n";
-    Print_View(view);
+    Print_View();
 
     registry.AddTag(entity3, tag1);
 
     std::cout << "After adding Health to John: \n";
-    Print_View(view);
+    Print_View();
 
     registry.Add<Health>(entity3);
 
     std::cout << "After adding Health to John: \n";
-    Print_View(view);
+    Print_View();
 
     registry.Remove<Health>(entity2);
 
     std::cout << "After removing Health from Alice: \n";
-    Print_View(view);
+    Print_View();
 
     registry.RemoveTag(entity1, tag1);
 
 
     std::cout << "After removing tag1 from Bob: \n";
-    Print_View(view);
+    Print_View();
 
     registry.AddTag(entity2, tag2);
 
     std::cout << "After adding tag2 to Alice: \n";
-    Print_View(view);
+    Print_View();
 
     return 0;
 }
