@@ -37,6 +37,7 @@ namespace lightning {
             View(std::vector<Entity_t>& Entity_list, Pool_Holder& pool_holder, std::initializer_list<Tag_t> tags = {})
             : include_pools(pool_holder.Get_Pool<Include>()...),
               excludes_pools(pool_holder.Get_Pool<Exclude>()...){
+
                 // add tag pools
                 std::for_each(tags.begin(), tags.end(), [&](Tag_t tag){
                     tag_pools.push_back(&pool_holder.Get_Pool(tag));
@@ -148,7 +149,10 @@ namespace lightning {
             const std::vector<Entity_t>& Get_Entitys() const {
                 return Entitys;
             }
+
         private:
+
+            // check if entity is in view
             bool check_entity(Entity_t entity){
                 bool In = std::apply([entity](auto& ... pools) { return (pools.Has(entity) && ...); }, include_pools);
                 bool Ex = std::apply([entity](auto& ... pools) { return (pools.Has(entity) && ...); }, excludes_pools);

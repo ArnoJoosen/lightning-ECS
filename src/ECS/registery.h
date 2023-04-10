@@ -109,9 +109,6 @@ namespace lightning::ECS {
             return View<Includes<Include...>, Excludes<Exclude...>>(Entitys, pools, tags);
         }
 
-        Pool_Holder& Get_PoolsHolder(){ return pools; }
-        std::vector<Entity_t>& Get_Entitys(){ return Entitys; }
-
     private:
         std::vector<Entity_t> Entitys; // list of active entities        std::unordered_set<Entity_t> EntitysSet; // set of active entities
         Pool_Holder pools; // container of component and tag pools

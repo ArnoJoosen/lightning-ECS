@@ -49,7 +49,6 @@ int main() {
     registry.Add<Name>(entity3, name3);
     registry.Add<Position>(entity3);
 
-    auto poolHolder = registry.Get_PoolsHolder();
     auto view = registry.view<Position, Name>({tag1}, ECS::Excludes<Health>());
 
     std::cout << "Before adding Health to John: \n";
@@ -77,6 +76,15 @@ int main() {
     registry.Remove<Health>(entity2);
 
     std::cout << "After removing Health from Alice: \n";
+    for (ECS::Entity_t entity : view){
+        auto& name = registry.Get<Name>(entity);
+        std::cout << "  " << name.name << std::endl;
+    }
+
+    registry.RemoveTag(entity1, tag1);
+
+
+    std::cout << "After removing tag from Bob: \n";
     for (ECS::Entity_t entity : view){
         auto& name = registry.Get<Name>(entity);
         std::cout << "  " << name.name << std::endl;
