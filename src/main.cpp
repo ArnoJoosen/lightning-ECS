@@ -3,7 +3,6 @@
 
 using namespace lightning;
 
-// TODO: add viewer pool
 // TODO: add only tag view
 // TODO: add one component view
 
