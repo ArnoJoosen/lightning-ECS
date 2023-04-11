@@ -31,14 +31,14 @@ DEFINE_TAG(tag1, 46544654165);
 DEFINE_TAG(tag2, 54695121566);
 
 ECS::registry registry;
-auto view = registry.view<Position, Name>({tag1, EXCLUDE_TAG(tag2)}, ECS::Excludes<Health>());
 
 void Print_View(){
-    if (view.size() == 0)
+    auto view = registry.view<Position, Name>({ tag1, EXCLUDE_TAG(tag2) }, ECS::Excludes<Health>());
+    if (view->size() == 0)
         std::cout << "  No entities" << std::endl;
     else
-        for (ECS::Entity_t entity : view){
-            auto& name = view.Get<Name>(entity);
+        for (ECS::Entity_t entity : *view){
+            auto& name = view->Get<Name>(entity);
             std::cout << "  " << name.name << std::endl;
         }
 }

@@ -12,6 +12,7 @@
 #include "View.hpp"
 #include "Tag_Pool.h"
 #include "Pool_Holder.h"
+#include "Pool_view.h"
 
 namespace lightning::ECS {
     /*
@@ -105,19 +106,24 @@ namespace lightning::ECS {
         /// - input: components to check, tags to check \n
         /// - output: view of entities
         template<typename ... Include, typename ... Exclude>
-        View<Includes<Include...>, Excludes<Exclude...>> view(std::initializer_list<Tag_t> tags = {}, Excludes<Exclude...> excludes = Excludes<>()) {
-            size_t id = typeid(View<Includes<Include...>, Excludes<Exclude...>>).hash_code();
-            for (auto& tag : tags)
-                id = id ^ tag;
+        View<Includes<Include...>, Excludes<Exclude...>>* view(std::initializer_list<Tag_t> tags = {}, Excludes<Exclude...> excludes = Excludes<>()) {
+            using view_type = View<Includes<Include...>, Excludes<Exclude...>>;
 
-            return View<Includes<Include...>, Excludes<Exclude...>>(Entitys, pools, tags);
+            size_t id = views.GetID<Includes<Include...>, Excludes<Exclude...>>(tags);
+            if (views.dus_view_exist(id))
+                return (view_type*)views.get_view(id);
+
+            view_type* ptr_view = new View<Includes<Include...>, Excludes<Exclude...>>(Entitys, pools, tags);
+            views.add_view(id, (Base_View*)ptr_view);
+            return ptr_view;
         }
 
     private:
-        std::vector<Entity_t> Entitys; // list of active entities        std::unordered_set<Entity_t> EntitysSet; // set of active entities
-        Pool_Holder pools; // container of component and tag pools
+        std::vector<Entity_t> Entitys; // list of active entities
+        std::unordered_set<Entity_t> FreeEntitysSet; // set of free entities
         std::vector<Entity_t> FreeEntitys; // list of free entities
-        std::unordered_set<Entity_t> FreeEntitysSet; // set of free entities0
+        Pool_Holder pools; // container of component and tag pools
+        Pool_view views; // view of pools
         Entity_t NextEntity = 0; // next entity id
     };
 } // ECS

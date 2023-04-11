@@ -10,6 +10,7 @@
 #include "Types.h"
 #include <algorithm>
 #include "Pool_Holder.h"
+#include <iostream>
 
 namespace lightning {
     namespace ECS {
@@ -24,11 +25,19 @@ namespace lightning {
         template<typename ... T>
         using Excludes = Type_List<T...>;
 
+        class Base_View{
+        public:
+            virtual std::vector<Entity_t>::iterator begin() = 0;
+            virtual std::vector<Entity_t>::iterator end() = 0;
+            virtual bool Contains(Entity_t entity) = 0;
+            virtual size_t size() const = 0;
+        };
+
         template<typename Include, typename Exclude>
         class View;
 
         template<typename ... Include, typename ... Exclude>
-        class View <Includes<Include...>, Excludes<Exclude...>> {
+        class View <Includes<Include...>, Excludes<Exclude...>> : public Base_View{
         public:
             struct Component_Job_Base{
                 virtual void Update(Entity_t, Include& ...) = 0;
@@ -37,7 +46,7 @@ namespace lightning {
             View(std::vector<Entity_t>& Entity_list, Pool_Holder& pool_holder, std::initializer_list<Tag_t> tags = {})
             : include_pools(pool_holder.Get_Pool<Include>()...),
               excludes_pools(pool_holder.Get_Pool<Exclude>()...){
-
+                std::cout << "Create view\n";
                 // add tag pools
                 std::for_each(tags.begin(), tags.end(), [&](Tag_t tag){
                     Tag_Pool_Node node = {(tag & 0x80000000) != 0, &pool_holder.Get_Pool(GET_TAG(tag))};
@@ -97,11 +106,6 @@ namespace lightning {
                 return Get_Pool<T>().Get(entity);
             }
 
-            template<typename T>
-            const T Get_const(Entity_t entity) {
-                return Get_Pool<T>().Get(entity);
-            }
-
             // set component data for entity
             template<typename T>
             void Set(Entity_t entity, T data){
@@ -109,22 +113,22 @@ namespace lightning {
             }
 
             // check if view contains entity
-            bool Contains(Entity_t entity) {
+            bool Contains(Entity_t entity) override {
                 return std::find(Entitys.begin(), Entitys.end(), entity) != Entitys.end();
             }
 
             // get number of entities in view
-            inline size_t size() const {
+            inline size_t size() const override {
                 return Entitys.size();
             }
 
             // get begin iterator
-            auto begin(){
+            std::vector<Entity_t>::iterator begin() override {
                 return Entitys.begin();
             }
 
             // get end iterator
-            auto end(){
+            std::vector<Entity_t>::iterator end() override {
                 return Entitys.end();
             }
 
@@ -145,11 +149,6 @@ namespace lightning {
                     job.Update(*it, Get<Include>(*it)...);
                     it++;
                 }
-            }
-
-            // Get Entitys
-            const std::vector<Entity_t>& Get_Entitys() const {
-                return Entitys;
             }
 
         private:
