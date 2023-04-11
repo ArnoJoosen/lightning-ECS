@@ -1,10 +1,9 @@
 #include <iostream>
 #include "ECS/registery.h"
 
-using namespace lightning;
+// TODO add sorting of entities by component
 
-// TODO: add only tag view
-// TODO: add one component view
+using namespace lightning;
 
 struct Position {
     float x, y;
@@ -33,6 +32,28 @@ ECS::registry registry;
 
 void Print_View(){
     auto view = registry.view<Position, Name>({ tag1, EXCLUDE_TAG(tag2) }, ECS::Excludes<Health>());
+    if (view->size() == 0)
+        std::cout << "  No entities" << std::endl;
+    else
+        for (ECS::Entity_t entity : *view){
+            auto& name = view->Get<Name>(entity);
+            std::cout << "  " << name.name << std::endl;
+        }
+}
+
+void Print_View2(){
+    auto view = registry.view<Position, Name>({ tag1, EXCLUDE_TAG(tag2) }, ECS::Excludes<Health>());
+    if (view->size() == 0)
+        std::cout << "  No entities" << std::endl;
+    else
+        for (ECS::Entity_t entity : *view){
+            auto& name = view->Get<Name>(entity);
+            std::cout << "  " << name.name << std::endl;
+        }
+}
+
+void Print_View3(){
+    auto view = registry.view<Position, Name>();
     if (view->size() == 0)
         std::cout << "  No entities" << std::endl;
     else
@@ -86,12 +107,15 @@ int main() {
 
 
     std::cout << "After removing tag1 from Bob: \n";
-    Print_View();
+    Print_View2();
 
     registry.AddTag(entity2, tag2);
 
     std::cout << "After adding tag2 to Alice: \n";
-    Print_View();
+    Print_View2();
 
+
+    std::cout << "view3\n";
+    Print_View3();
     return 0;
 }

@@ -91,7 +91,7 @@ namespace lightning::ECS {
         /// get component pool for type \n
         /// - input: type of component \n
         template<typename T>
-        Component_Pool<T>& Get_Pool(){;
+        Component_Pool<T>& Get_Pool(){
             return pools.Get_Pool<T>();
         }
 
